@@ -34,7 +34,7 @@ deploy:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - sed -i "s|image: .*|image: $IMAGE_TAG|" manifests/deployment.yaml
+    - sed -i 's|image: .*|image: '"$IMAGE_TAG"'|' manifests/deployment.yaml
     - kubectl --kubeconfig $KUBECONFIG apply -f manifests/ -n $KUBE_NAMESPACE
   only:
     - main
