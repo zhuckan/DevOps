@@ -33,9 +33,10 @@ build:
 deploy:
   stage: deploy
   image: bitnami/kubectl:latest
+  before_script:
+    - apt-get update && apt-get install -y gettext
   script:
-    - sed -i 's|image: .*|image: '"$IMAGE_TAG"'|' manifests/deployment.yaml
-    - kubectl --kubeconfig $KUBECONFIG apply -f manifests/ -n $KUBE_NAMESPACE
+    - envsubst < manifests/deployment.yaml | kubectl --kubeconfig $KUBECONFIG apply -f - -n $KUBE_NAMESPACE
   only:
     - main
   when: manual
