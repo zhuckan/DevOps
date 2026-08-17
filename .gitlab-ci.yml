@@ -18,17 +18,11 @@ test:
 
 build:
   stage: build
-  image: docker:24
-  services:
-    - name: docker:24-dind
-      command: ["--insecure-registry=host.docker.internal:5050"]
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   script:
-    - docker build -t "$IMAGE_TAG" .
-    - docker push "$IMAGE_TAG"
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $IMAGE_TAG --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD --insecure --skip-tls-verify
   only:
     - main
 
