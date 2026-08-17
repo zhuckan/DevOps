@@ -15,8 +15,8 @@ services:
       - ./gitlab/data:/var/opt/gitlab
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.local:8088'
-        registry_external_url 'http://gitlab.local:5050'
+        external_url 'http://host.docker.internal:8088'
+        registry_external_url 'http://host.docker.internal:5050'
         gitlab_rails['registry_enabled'] = true
         registry['enable'] = true
         registry['registry_http_addr'] = "0.0.0.0:5000"
