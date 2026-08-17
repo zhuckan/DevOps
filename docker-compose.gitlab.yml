@@ -8,6 +8,7 @@ services:
       - "8088:80"
       - "8443:443"
       - "8022:22"
+      - "5050:5000"
     volumes:
       - ./gitlab/config:/etc/gitlab
       - ./gitlab/logs:/var/log/gitlab
@@ -15,3 +16,13 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://gitlab.local:8088'
+        registry_external_url 'http://gitlab.local:5050'
+        gitlab_rails['registry_enabled'] = true
+        registry['enable'] = true
+        registry['registry_http_addr'] = "0.0.0.0:5000"
+        nginx['listen_address'] = '0.0.0.0'
+        nginx['listen_port'] = 80
+        puma['socket_permissions'] = '660'
+        puma['socket_user'] = 'git'
+        puma['socket_group'] = 'gitlab-www'
+        gitlab_rails['db_password'] = 'StrongPass2026!'

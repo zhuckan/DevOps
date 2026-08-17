@@ -4,39 +4,52 @@ stages:
   - deploy
 
 variables:
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  KUBE_NAMESPACE: ml-service
-
-before_script:
-  - apt-get update && apt-get install -y python3-pip
-  - pip3 install pytest
+  IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  KUBE_NAMESPACE: "ml-service"
 
 test:
   stage: test
+  image: python:3.9-slim
   script:
+    - pip install --no-cache-dir -r requirements.txt pytest
     - pytest tests/
   only:
     - main
 
 build:
   stage: build
-  image: docker:latest
+  image: docker:24
   services:
-    - docker:dind
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $IMAGE_TAG .
-    - docker push $IMAGE_TAG
+    - docker build -t "$IMAGE_TAG" .
+    - docker push "$IMAGE_TAG"
   only:
     - main
 
 deploy:
   stage: deploy
   image: bitnami/kubectl:latest
-  before_script:
-    - apt-get update && apt-get install -y gettext
   script:
-    - envsubst < manifests/deployment.yaml | kubectl --kubeconfig $KUBECONFIG apply -f - -n $KUBE_NAMESPACE
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/namespace.yaml
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/rbac.yaml
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/quota.yaml
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/limitrange.yaml
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/service.yaml
+    - kubectl --kubeconfig "$KUBECONFIG" create secret docker-registry gitlab-registry \
+        --docker-server="$CI_REGISTRY" \
+        --docker-username="$CI_REGISTRY_USER" \
+        --docker-password="$CI_REGISTRY_PASSWORD" \
+        --docker-email="ci@example.com" \
+        -n "$KUBE_NAMESPACE" \
+        --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
+    - sed "s|__CI_REGISTRY_IMAGE__|$CI_REGISTRY_IMAGE|g; s|__CI_COMMIT_SHORT_SHA__|$CI_COMMIT_SHORT_SHA|g" manifests/deployment.yaml \
+        | kubectl --kubeconfig "$KUBECONFIG" apply -f -
+    - kubectl --kubeconfig "$KUBECONFIG" apply -f manifests/ingress.yaml
   only:
     - main
   when: manual

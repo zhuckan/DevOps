@@ -16,28 +16,30 @@ spec:
         app: ml-app
     spec:
       serviceAccountName: ml-app
+      imagePullSecrets:
+        - name: gitlab-registry
       containers:
-      - name: api
-        image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8000
-        resources:
-          requests:
-            cpu: "200m"
-            memory: "256Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-        livenessProbe:
-          httpGet:
-            path: /status
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /status
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: api
+          image: __CI_REGISTRY_IMAGE__:__CI_COMMIT_SHORT_SHA__
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5

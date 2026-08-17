@@ -4,14 +4,15 @@ metadata:
   name: ml-app-ingress
   namespace: ml-service
 spec:
+  ingressClassName: nginx
   rules:
-  - host: creditcard.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ml-app
-            port:
-              number: 8000
+    - host: creditcard.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ml-app
+                port:
+                  number: 8000
