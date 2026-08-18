@@ -31,7 +31,9 @@ build:
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
   script:
     - sh ./deploy.sh
   only:
