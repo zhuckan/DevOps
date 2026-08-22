@@ -11,7 +11,7 @@ test:
   stage: test
   image: python:3.9-slim
   script:
-    - pip install --no-cache-dir -r requirements.txt pytest
+    - pip install --no-cache-dir -r requirements-test.txt
     - pytest tests/
   only:
     - main
