@@ -12,7 +12,7 @@ services:
     volumes:
       - ./gitlab/config:/etc/gitlab
       - ./gitlab/logs:/var/log/gitlab
-      - ./gitlab/data:/var/opt/gitlab
+      - gitlab-data:/var/opt/gitlab
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://host.docker.internal:8088'
@@ -26,3 +26,18 @@ services:
         puma['socket_user'] = 'git'
         puma['socket_group'] = 'gitlab-www'
         gitlab_rails['db_password'] = 'StrongPass2026!'
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+    depends_on:
+      - gitlab
+    volumes:
+      - ./gitlab-runner/config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  gitlab-data:

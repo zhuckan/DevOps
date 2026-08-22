@@ -24,7 +24,7 @@ class DataPreprocessor:
         self.preprocessor = None
         self.feature_names = None
 
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y=None):
         numerical_features = ['Amount', 'Hour']
         numerical_transformer = Pipeline([('scaler', StandardScaler())])
         self.preprocessor = ColumnTransformer(
@@ -33,7 +33,7 @@ class DataPreprocessor:
         )
         X_processed = self.preprocessor.fit_transform(X)
         self.feature_names = numerical_features + [col for col in X.columns if col not in numerical_features]
-        return pd.DataFrame(X_processed, columns=self.feature_names), y
+        return pd.DataFrame(X_processed, columns=self.feature_names)
 
     def transform(self, X):
         X_processed = self.preprocessor.transform(X)
@@ -105,8 +105,8 @@ class XGBoostModel(Model):
 
 def main():
     config = Config()
-    mlflow.set_experiment("Creditcard_Model_Tuning")
     mlflow.set_tracking_uri(config.mlflow_uri)
+    mlflow.set_experiment("Creditcard_Model_Tuning")
 
     df = pd.read_csv(config.data_path)
     df.drop_duplicates(inplace=True)
@@ -121,8 +121,6 @@ def main():
     )
 
     preprocessor = DataPreprocessor()
-    X_train_proc, y_train = preprocessor.fit_transform(X_train, y_train)
-    X_test_proc = preprocessor.transform(X_test)
 
     scale_pos_weight = (len(y_train) - sum(y_train)) / sum(y_train)
 
@@ -150,41 +148,32 @@ def main():
 
     cv = StratifiedKFold(n_splits=config.cv_folds, shuffle=True, random_state=42)
 
-    best_overall_score = 0
-    best_model = None
-
     for model in models:
         with mlflow.start_run(run_name=f"{model.name}_Training") as run:
             run_id = run.info.run_id
 
+            mlflow.log_param("model_name", model.name)
             mlflow.log_param("test_size", config.test_size)
             mlflow.log_param("cv_folds", config.cv_folds)
 
-            model.train(X_train_proc, y_train, cv)
+            model.train(X_train, y_train, cv)
             mlflow.log_params(model.best_params)
-            mlflow.log_metric(f"{model.name}_cv_auprc", model.cv_score)
+            mlflow.log_metric("cv_auprc", model.cv_score)
 
-            metrics = model.evaluate(X_test_proc, y_test)
-            mlflow.log_metric(f"{model.name}_test_roc_auc", metrics['roc_auc'])
-            mlflow.log_metric(f"{model.name}_test_auprc", metrics['pr_auc'])
+            metrics = model.evaluate(X_test, y_test)
+            mlflow.log_metric("test_roc_auc", metrics['roc_auc'])
+            mlflow.log_metric("test_auprc", metrics['pr_auc'])
 
             print(f"\n{model.name} лучший AUPRC (CV): {model.cv_score:.4f}")
             print(f"Лучшие параметры: {model.best_params}")
             print(f"ROC-AUC на тесте: {metrics['roc_auc']:.4f}")
             print(f"AUPRC на тесте: {metrics['pr_auc']:.4f}")
 
-            mlflow.sklearn.save_model(
+            mlflow.sklearn.log_model(
                 model.best_pipe,
-                f"mlruns/0/{run_id}/artifacts/best_model"
+                name="best_model",
+                input_example=X_train.iloc[:1]
             )
-            mlflow.log_artifacts(f"mlruns/0/{run_id}/artifacts/best_model", artifact_path="best_model")
-
-            if model.cv_score > best_overall_score:
-                best_overall_score = model.cv_score
-                best_model = model
-
-    if best_model is not None:
-        print(f"\nЛучшая модель: {best_model.name} с AUPRC (CV): {best_overall_score:.4f}")
 
 if __name__ == '__main__':
     main()

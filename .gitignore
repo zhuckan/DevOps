@@ -6,17 +6,24 @@ creditcard.csv
 
 mlruns/
 mlflow/
+model.pkl
 
 minio_data/
+
 gitlab/
 
 .DS_Store
 .idea/
 .vscode/
+
 *.ipynb
 .ipynb_checkpoints/
+
 __pycache__/
 *.pyc
 
 volumes/
+
 *.log
+
+kubeconfig*.yaml
