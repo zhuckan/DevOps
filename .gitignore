@@ -6,7 +6,6 @@ creditcard.csv
 
 mlruns/
 mlflow/
-model.pkl
 
 minio_data/
 

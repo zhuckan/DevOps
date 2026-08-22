@@ -1,6 +1,5 @@
 stages:
   - test
-  - export_model
   - build
   - deploy
 
@@ -14,19 +13,6 @@ test:
   script:
     - pip install --no-cache-dir -r requirements.txt pytest
     - pytest tests/
-  only:
-    - main
-
-export_model:
-  stage: export_model
-  image: python:3.9-slim
-  script:
-    - pip install --no-cache-dir -r requirements.txt
-    - python export_model.py
-  artifacts:
-    paths:
-      - model.pkl
-    expire_in: 1 week
   only:
     - main
 
