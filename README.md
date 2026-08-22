@@ -1,6 +1,6 @@
 # DevOps: CI/CD for ML Service
 
-This project automates the build, test, and deployment of an ML service (from Task 1) using GitLab CE as the CI/CD tool and Minikube as the Kubernetes cluster.
+This project automates the build, test, and deployment of an ML service using GitLab CE as the CI/CD tool and Minikube as the Kubernetes cluster.
 
 ## What is done
 
