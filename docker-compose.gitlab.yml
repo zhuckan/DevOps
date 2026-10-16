@@ -25,7 +25,7 @@ services:
         puma['socket_permissions'] = '660'
         puma['socket_user'] = 'git'
         puma['socket_group'] = 'gitlab-www'
-        gitlab_rails['db_password'] = 'StrongPass2026!'
+        gitlab_rails['db_password'] = ''
 
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
